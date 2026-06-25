@@ -1,0 +1,4 @@
+id,titre,description,probabilite,impact,criticite,statut,proprietaire,plan_mitigation,echeance_mitigation,date_identification,notes
+R-01,,,,Faible|Moyenne|Elevée,Faible|Moyen|Elevé,,Ouvert|Surveillé|Clos,,,,
+R-02,,,,,,,,,,,
+R-03,,,,,,,,,,,

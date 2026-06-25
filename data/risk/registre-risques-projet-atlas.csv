@@ -1,0 +1,4 @@
+id_risque,titre,probabilite,impact,statut,plan_mitigation
+R-01,Dependance API tierce paiement non stabilisee,Moyenne,Eleve,Ouvert,Tests d'integration renforces prevus sprint 30
+R-02,Turnover possible sur poste Designer,Faible,Moyen,Surveille,Aucun plan formalise a ce jour
+R-03,Perimetre fonctionnel Parcours Client encore mouvant,Elevee,Moyen,Ouvert,Atelier de cadrage prevu avec le client en juillet

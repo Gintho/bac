@@ -1,0 +1,19 @@
+periode,categorie,budget_prevu_eur,consomme_eur,engage_non_facture_eur
+2026-01,Developpement,18000,17200,1500
+2026-01,Design,6000,5800,0
+2026-01,Conduite du changement,3000,2100,0
+2026-02,Developpement,18000,18900,2200
+2026-02,Design,6000,4200,500
+2026-02,Conduite du changement,3000,2400,0
+2026-03,Developpement,18000,21500,3100
+2026-03,Design,6000,3900,0
+2026-03,Conduite du changement,3000,2800,300
+2026-04,Developpement,18000,23800,4200
+2026-04,Design,4000,3100,0
+2026-04,Conduite du changement,3000,3300,0
+2026-05,Developpement,18000,26100,5400
+2026-05,Design,3000,2400,0
+2026-05,Conduite du changement,2500,3100,200
+2026-06,Developpement,18000,27900,6800
+2026-06,Design,2000,1800,0
+2026-06,Conduite du changement,2500,2900,0

@@ -1,0 +1,25 @@
+periode,identifiant,role,taux_allocation_pct,livrable_principal,nb_incidents,temps_resolution_moyen_h
+2026-01,Dev-Lead-A,Lead Developpeur,95,API Paiement,2,4
+2026-01,Dev-B,Developpeur,80,Front Portail,1,2
+2026-01,Dev-C,Developpeur,75,Front Portail,0,0
+2026-01,UX-A,Designer,60,Parcours Client,0,0
+2026-02,Dev-Lead-A,Lead Developpeur,105,API Paiement,3,5
+2026-02,Dev-B,Developpeur,85,Front Portail,1,3
+2026-02,Dev-C,Developpeur,70,Front Portail,1,2
+2026-02,UX-A,Designer,55,Parcours Client,0,0
+2026-03,Dev-Lead-A,Lead Developpeur,110,API Paiement,4,6
+2026-03,Dev-B,Developpeur,90,Front Portail,2,4
+2026-03,Dev-C,Developpeur,65,Front Portail,1,3
+2026-03,UX-A,Designer,50,Parcours Client,0,0
+2026-04,Dev-Lead-A,Lead Developpeur,115,API Paiement,5,7
+2026-04,Dev-B,Developpeur,90,Front Portail,2,5
+2026-04,Dev-C,Developpeur,60,Front Portail,1,3
+2026-04,UX-A,Designer,40,Parcours Client,0,0
+2026-05,Dev-Lead-A,Lead Developpeur,120,API Paiement,6,8
+2026-05,Dev-B,Developpeur,95,Front Portail,3,6
+2026-05,Dev-C,Developpeur,55,Front Portail,2,4
+2026-05,UX-A,Designer,35,Parcours Client,0,0
+2026-06,Dev-Lead-A,Lead Developpeur,120,API Paiement,7,9
+2026-06,Dev-B,Developpeur,95,Front Portail,3,6
+2026-06,Dev-C,Developpeur,50,Front Portail,2,5
+2026-06,UX-A,Designer,30,Parcours Client,0,0

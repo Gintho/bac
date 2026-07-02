@@ -24,7 +24,7 @@ Site associatif WordPress pour **Les Bonnets Gris** — association de lutte con
 | Performance | WP Rocket + Cloudflare CDN |
 | RGPD | Complianz (cookie banner + consent mode v2) |
 | Analytics | Google Analytics 4 (consent mode v2) |
-| Email | Mailchimp + plugin officiel |
+| Email + CRM | Sendinblue / Brevo (API REST + SMTP) |
 | SEO | Yoast SEO |
 | Sécurité | Wordfence |
 

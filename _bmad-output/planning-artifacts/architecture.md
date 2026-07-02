@@ -89,6 +89,7 @@ technicalConstraints:
 | Sécurité WP | **Wordfence** (Free) | Firewall, scan malware, brute force protection |
 | SEO | **Yoast SEO** | Standard associatif, schema.org Organisation/Nonprofit |
 | Backup | **UpdraftPlus** | Backup automatique GitHub + OVH |
+| Email + CRM | **Sendinblue / Brevo** | Email transactionnel + marketing + automation + CRM contacts (remplace Mailchimp) |
 | Formulaires | **CF7** ou **Gravity Forms Lite** | Formulaires contact presse, partenariat |
 
 ### Initialisation du projet
@@ -445,6 +446,141 @@ function bonnets_gris_loir_redirect_block() {
 ```
 
 **Tracking :** GA4 event `outbound_click` automatique via gtag.js — mesure du trafic envoyé chez Loir sans développement.
+
+---
+
+### ADR-009 : Plateforme Email + CRM — Sendinblue / Brevo
+
+**Contexte :** Le PRD initial référençait Mailchimp pour la gestion newsletter. Après analyse, Sendinblue (rebrandé Brevo en 2023) présente des avantages structurels pour Les Bonnets Gris : hébergement des données en France (RGPD natif), unification email transactionnel + marketing dans une seule plateforme, et coût prévisible (tarification à l'envoi, pas au contact).
+
+**Décision : Sendinblue / Brevo comme plateforme email, CRM et automation unique**
+
+| Composant | Sendinblue / Brevo | Mailchimp (rejeté) |
+| --- | --- | --- |
+| Données hébergées | 🇫🇷 France (Strasbourg) | 🇺🇸 USA (RGPD à risque) |
+| Email transactionnel | ✅ Intégré (SMTP + API) | ❌ Mandrill séparé et payant |
+| CRM contacts | ✅ Intégré (listes + attributs custom) | ⚠️ Basique |
+| Automation | ✅ Workflows visuels | ✅ (mais payant à partir de 500 contacts) |
+| Segmentation | ✅ Donateurs / membres / inscrits | ✅ |
+| Coût 0–2K contacts | Gratuit (300 emails/jour) | Gratuit (500 contacts) |
+| API REST | ✅ Complète | ✅ |
+| Plugin WordPress officiel | ✅ (Brevo for WordPress) | ✅ |
+| Conformité RGPD | ✅ DPA européen, données en France | ⚠️ DPA standard clauses |
+
+**Architecture de la DATA client (Sendinblue comme hub) :**
+
+```
+HelloAsso webhook → WordPress plugin → Sendinblue API
+                                    ↓
+                    Contact créé/mis à jour avec attributs :
+                    - SOURCE : don / adhésion / newsletter
+                    - MONTANT_CUMULE : calculé depuis HelloAsso
+                    - FORMULE_ADHESION : ami / bonnet-gris / ambassadeur
+                    - DATE_PREMIER_DON : timestamp HelloAsso
+                    ↓
+                    Segmentation automatique → Listes Brevo :
+                    - [LBG] Donateurs récurrents
+                    - [LBG] Membres actifs
+                    - [LBG] Newsletter simple
+                    - [LBG] Prospects (opt-in uniquement)
+```
+
+**Emails transactionnels gérés par Brevo (remplace WP native mail) :**
+
+```php
+// Tous les emails transactionnels passent par l'API Brevo
+// Configurer WP Mail SMTP avec le SMTP Brevo (port 587, TLS)
+define('BREVO_API_KEY', 'your-api-key'); // dans wp-config.php
+define('BREVO_SMTP_HOST', 'smtp-relay.brevo.com');
+
+// Templates Brevo utilisés :
+// #1 : Confirmation de don (paramètre : montant, reçu fiscal)
+// #2 : Bienvenue membre (paramètre : formule, badge digital)
+// #3 : Email de bienvenue newsletter (double opt-in)
+// #4 : Reçu fiscal annuel (Cerfa 11580*03)
+```
+
+**Séquences automation Brevo (remplace Mailchimp sequences) :**
+
+```
+Trigger: Contact rejoint liste [LBG] Newsletter
+  J+0  → Email bienvenue (ton love brand, mission)
+  J+3  → Email impact collectif + témoignage membre
+  J+7  → Email CTA premier don ou adhésion (montant suggéré : 30€)
+
+Trigger: Contact devient Donateur récurrent (webhook HelloAsso)
+  J+0  → Email confirmation + reçu fiscal automatique
+  M+1  → Email impact du mois (argent collecté → recherche financée)
+  M+3  → Proposition upgrade adhésion si pas encore membre
+
+Trigger: Contact devient Membre (webhook HelloAsso)
+  J+0  → Email bienvenue membre + badge digital
+  J+7  → Email onboarding (événements, cagnottes, réseaux)
+```
+
+**Sync HelloAsso ↔ Brevo via webhook WordPress :**
+
+```php
+// Plugin bonnets-gris-core / helloasso/class-helloasso-webhook.php
+class BonnetsGris_HelloAsso_Webhook {
+    public function handle_payment(array $data): void {
+        $email  = sanitize_email($data['payer']['email'] ?? '');
+        $amount = (float)($data['amount']['total'] ?? 0);
+        $type   = $data['type'] ?? 'don'; // 'don' | 'adhesion'
+
+        if (!$email) return;
+
+        // Sync vers Brevo via API REST
+        wp_remote_post('https://api.brevo.com/v3/contacts', [
+            'headers' => [
+                'api-key'      => BREVO_API_KEY,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'email'          => $email,
+                'updateEnabled'  => true,
+                'attributes'     => [
+                    'PRENOM'             => sanitize_text_field($data['payer']['firstName'] ?? ''),
+                    'NOM'                => sanitize_text_field($data['payer']['lastName'] ?? ''),
+                    'SOURCE'             => $type,
+                    'DATE_PREMIER_DON'   => current_time('Y-m-d'),
+                    'MONTANT_CUMULE'     => $amount,
+                ],
+                'listIds' => $type === 'adhesion' ? [BREVO_LIST_MEMBRES] : [BREVO_LIST_DONATEURS],
+            ]),
+        ]);
+    }
+}
+add_action('bonnets_gris_helloasso_webhook', [new BonnetsGris_HelloAsso_Webhook(), 'handle_payment']);
+```
+
+**Variables dans wp-config.php (jamais en base) :**
+
+```php
+define('BREVO_API_KEY',         'your-brevo-api-key');
+define('BREVO_SMTP_HOST',       'smtp-relay.brevo.com');
+define('BREVO_SMTP_PORT',       587);
+define('BREVO_LIST_NEWSLETTER', 1);  // ID liste newsletter
+define('BREVO_LIST_DONATEURS',  2);  // ID liste donateurs
+define('BREVO_LIST_MEMBRES',    3);  // ID liste membres
+```
+
+**Conformité RGPD avec Brevo :**
+- ✅ Données hébergées en France (Strasbourg) — DPA européen signé
+- ✅ Double opt-in natif configurable dans Brevo
+- ✅ Droit à l'effacement : API DELETE /contacts/{email}
+- ✅ Export données contact : API GET /contacts/{email}
+- ✅ Complianz peut bloquer le chargement du tracker Brevo jusqu'au consentement marketing
+- ⚠️ La liste Brevo doit être déclarée dans le registre des traitements Complianz
+
+**Conséquences :**
+- ✅ RGPD natif — données en France, DPA robuste
+- ✅ Email transactionnel + marketing unifiés (un seul outil, une seule facture)
+- ✅ CRM contacts structuré dès le premier don (segmentation donateur / membre / prospect)
+- ✅ Automation visuelles sans développement pour l'équipe LBG
+- ✅ API REST complète pour la sync HelloAsso webhook
+- ⚠️ Migration données si historique Mailchimp existant (export CSV + import Brevo)
+- ⚠️ Configurer le SMTP Brevo dans wp-config.php (BREVO_API_KEY jamais en base)
 
 ---
 
